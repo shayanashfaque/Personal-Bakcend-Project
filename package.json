@@ -1,0 +1,19 @@
+{
+  "name": "basicapp",
+  "version": "1.0.0",
+  "description": "a basic app for learning",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "basic",
+    "app"
+  ],
+  "author": "shayan ashfaq",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0"
+  }
+}
