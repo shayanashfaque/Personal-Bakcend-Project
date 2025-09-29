@@ -1,39 +1,64 @@
+const mongoose = require('mongoose')
 require('dotenv').config()
 const express = require('express')
 const app = express()
 
-// Always pull PORT from env (fallback to 3000 if not set)
+// Port
 const port = process.env.PORT || 3000
 
-app.use(express.static('public'));
+// Middleware
+app.use(express.json()) 
+app.use(express.static('public'))
 
-app.get('/home', (req,res)=>{
-    res.send("This is the home page")
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URL)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("❌ MongoDB error:", err))
+
+// Court model (replacing Notes)
+const Court = mongoose.model('Court', {
+  name: String,
+  location: String,
+  pricePerHour: Number,
+  available: { type: Boolean, default: true }
 })
 
-app.get('/login', (req,res)=>{
-    res.send('<h1>This is the login page</h1>')
+// ---------------------
+// Routes
+// ---------------------
+
+// COURTS
+// Get all courts
+app.get('/api/courts', async (req, res) => {
+  const courts = await Court.find()
+  res.json(courts)
 })
 
-app.get('/aboutus', (req,res)=>{
-    res.send("This is a first app made by yours truly")
+// Add a new court (admin/testing)
+app.post('/api/courts', async (req, res) => {
+  const { name, location, pricePerHour } = req.body
+  const court = new Court({ name, location, pricePerHour })
+  await court.save()
+  res.json(court)
 })
 
-app.get('/api/user',(req,res)=>{
+// Test route: user info
+app.get('/api/user', (req,res) => {
   res.json({
-    name:"Shayan",
-    age:24, 
-    role:"Developer"
+    name: "Shayan",
+    age: 24,
+    role: "Developer"
   })
 })
 
-// 🔹 Route parameter example
+// Route parameter example
 app.get('/hello/:name', (req, res) => {
-  res.send(`Hello, ${req.params.name}!`);
-});
-
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+  res.send(`Hello, ${req.params.name}!`)
 })
 
+// ---------------------
+// Start Server
+// ---------------------
+app.listen(port, () => {
+  console.log(`🚀 Server running on http://localhost:${port}`)
+})
