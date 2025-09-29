@@ -15,17 +15,22 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB error:", err))
 
-// Court model (replacing Notes)
+// Court model 
 const Court = mongoose.model('Court', {
+  court_id: Number,
   name: String,
   location: String,
   pricePerHour: Number,
   available: { type: Boolean, default: true }
 })
-
-// ---------------------
-// Routes
-// ---------------------
+//User model
+const User=mongoose.model('User',{
+  user_id:Number, 
+  name:String,
+   email: String,
+   password:String, 
+   role:{type:String, default:"User" }
+})
 
 // COURTS
 // Get all courts
@@ -41,6 +46,20 @@ app.post('/api/courts', async (req, res) => {
   await court.save()
   res.json(court)
 })
+//Add a new user
+app.post('/api/user/register', async (req, res)=>{
+  const { name,email, password}=req.body
+  const user=new User({name,email,password})
+  await user.save()
+  res.json(user)
+
+})
+
+app.get('/api/user',async (req,res)=>{
+   const user=await User.find()
+   res.json(user)
+
+})
 
 // Test route: user info
 app.get('/api/user', (req,res) => {
@@ -51,10 +70,7 @@ app.get('/api/user', (req,res) => {
   })
 })
 
-// Route parameter example
-app.get('/hello/:name', (req, res) => {
-  res.send(`Hello, ${req.params.name}!`)
-})
+
 
 // ---------------------
 // Start Server
