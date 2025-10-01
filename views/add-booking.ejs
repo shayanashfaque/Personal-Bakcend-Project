@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Footlinks - Add Booking</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #f8f9fa;
+    }
+    .booking-card {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+    .booking-card h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #0a6847;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #0a6847;
+      box-shadow: 0 0 4px rgba(10,104,71,0.4);
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a6847;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: 0.2s;
+    }
+    .submit-btn:hover {
+      background: #085c3f;
+    }
+  </style>
+</head>
+<body>
+  <div class="booking-card">
+    <h2>Add Booking</h2>
+
+    <form action="/booking/new" method="POST">
+      <!-- User: hardcoded for now -->
+      <input type="hidden" name="user" value="633a7c1f29f0ab1234567890">
+
+      <!-- Court: from route -->
+      <input type="hidden" name="court" value="<%= court._id %>">
+
+      <p>Booking court: <strong><%= court.name %></strong></p>
+
+      <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" required>
+      </div>
+
+      <div class="form-group">
+        <label for="startTime">Start Time</label>
+        <input type="text" id="startTime" name="startTime" placeholder="HH:MM" required>
+      </div>
+
+      <div class="form-group">
+        <label for="endTime">End Time</label>
+        <input type="text" id="endTime" name="endTime" placeholder="HH:MM" required>
+      </div>
+
+      <button type="submit" class="submit-btn">Confirm Booking</button>
+    </form>
+  </div>
+</body>
+</html>

@@ -10,6 +10,7 @@ const port = process.env.PORT || 3000
 app.set('view engine', 'ejs');
 app.use(express.json()) 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 
 
 // Connect to MongoDB
@@ -35,6 +36,14 @@ const User=mongoose.model('User',{
    role:{type:String, default:"User" }
 })
 
+const Booking=mongoose.model('Booking',{
+  user:{type: mongoose.Schema.Types.ObjectId, ref:"User"},
+  court:{type: mongoose.Schema.Types.ObjectId, ref:"Court"},
+  date:Date,
+  startTime:String,
+  endTime: String
+})
+
 app.get('/', (req, res) => {
   res.render('home'); 
 });
@@ -47,7 +56,7 @@ app.get('/courts', async (req, res) => {
   res.render('court',{courts})
 })
 
-// Add a new court (admin/testing)
+// Add a new court 
 app.get("/courts/new", (req, res) => {
   res.render("add-courts");
 });
@@ -65,9 +74,52 @@ app.post('/user/register', async (req, res)=>{
   const { name,phonenumber,email, password}=req.body
   const user=new User({name,phonenumber,email,password})
   await user.save()
-  res.render('/')
+  res.redirect('/')
 
 })
+app.get('/booking', async (req, res) => {
+  const bookings = await Booking.find()
+    .populate("user")
+    .populate("court");
+
+  res.render("booking", { bookings });
+});
+
+
+app.get("/booking/new", async (req, res) => {
+  const courtId = req.query.courtId;
+  let court = null;
+
+  if (courtId) {
+    court = await Court.findById(courtId);
+  }
+
+  if (!court) {
+    return res.send("❌ Please select a court first.");
+  }
+
+  res.render("add-booking", { court });
+});
+
+
+
+app.post('/booking/new', async (req, res) => {
+  const { user, court, date, startTime, endTime } = req.body;
+
+  const booking = new Booking({
+    user,      
+    court,     
+    date,
+    startTime,
+    endTime
+  });
+
+  await booking.save();
+  res.redirect('/booking'); 
+});
+
+
+
 
 
 // Test route: user info
