@@ -7,8 +7,10 @@ const app = express()
 const port = process.env.PORT || 3000
 
 // Middleware
+app.set('view engine', 'ejs');
 app.use(express.json()) 
-app.use(express.static('public'))
+app.use(express.urlencoded({ extended: true }));
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URL)
@@ -26,43 +28,50 @@ const Court = mongoose.model('Court', {
 //User model
 const User=mongoose.model('User',{
   user_id:Number, 
+  phonenumber:String,
   name:String,
    email: String,
    password:String, 
    role:{type:String, default:"User" }
 })
 
+app.get('/', (req, res) => {
+  res.render('home'); 
+});
+
+
 // COURTS
 // Get all courts
-app.get('/api/courts', async (req, res) => {
+app.get('/courts', async (req, res) => {
   const courts = await Court.find()
-  res.json(courts)
+  res.render('court',{courts})
 })
 
 // Add a new court (admin/testing)
-app.post('/api/courts', async (req, res) => {
+app.get("/courts/new", (req, res) => {
+  res.render("add-courts");
+});
+app.post('/courts/new', async (req, res) => {
   const { name, location, pricePerHour } = req.body
   const court = new Court({ name, location, pricePerHour })
   await court.save()
-  res.json(court)
+  res.redirect('/courts')
 })
 //Add a new user
-app.post('/api/user/register', async (req, res)=>{
-  const { name,email, password}=req.body
-  const user=new User({name,email,password})
+app.get("/user/register", (req, res) => {
+  res.render("register");
+});
+app.post('/user/register', async (req, res)=>{
+  const { name,phonenumber,email, password}=req.body
+  const user=new User({name,phonenumber,email,password})
   await user.save()
-  res.json(user)
+  res.render('/')
 
 })
 
-app.get('/api/user',async (req,res)=>{
-   const user=await User.find()
-   res.json(user)
-
-})
 
 // Test route: user info
-app.get('/api/user', (req,res) => {
+app.get('/user', (req,res) => {
   res.json({
     name: "Shayan",
     age: 24,
