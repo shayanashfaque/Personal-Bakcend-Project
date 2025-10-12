@@ -3,107 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Footlinks - Home</title>
+  <title>Add Booking - Footlinks</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      display: flex;
-      height: 100vh;
       background: #f8f9fa;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      width: 200px;
-      background: #0a6847;
-      color: #fff;
       display: flex;
-      flex-direction: column;
-      padding: 1rem;
-    }
-    .sidebar h2 {
-      margin: 0 0 2rem;
-      text-align: center;
-      font-size: 1.2rem;
-      color: #fff;
-    }
-    .sidebar a {
-      color: #fff;
-      text-decoration: none;
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
-      margin-bottom: 0.5rem;
-      transition: background 0.2s;
-    }
-    .sidebar a:hover {
-      background: #085c3f;
-    }
-
-    /* Main content */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Topbar */
-    .topbar {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 1rem;
-      background: #fff;
-      border-bottom: 1px solid #ddd;
-    }
-    .login-circle {
-      width: 40px;
-      height: 40px;
-      background: #0a6847;
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
       justify-content: center;
-      font-weight: bold;
-      text-decoration: none;
-      transition: background 0.2s;
+      align-items: flex-start;
+      min-height: 100vh;
+      margin: 0;
     }
-    .login-circle:hover {
+    .form-container {
+      background: #fff;
+      margin-top: 3rem;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #0a6847;
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0 0.3rem;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background: #0a6847;
+      color: #fff;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover {
       background: #085c3f;
     }
-
-    /* Content body */
-    .content {
-      padding: 2rem;
-      flex: 1;
-    }
-    .content h1 {
-      color: #0a6847;
+    .info-text {
       margin-bottom: 1rem;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h2>Footlinks</h2>
-    <a href="/courts">Courts</a>
-    <a href="/bookings">Bookings</a>
-  </div>
+  <div class="form-container">
+    <h2>Add Booking</h2>
 
-  <!-- Main -->
-  <div class="main-content">
-    <!-- Top bar -->
-    <div class="topbar">
-      <a href="/login" class="login-circle">L</a>
-    </div>
+    <form action="/booking/new" method="POST">
+      <!-- Hidden IDs -->
+      <input type="hidden" name="court" value="<%= court._id %>">
+      <input type="hidden" name="user" value="<%= user._id %>">
 
-    <!-- Body -->
-    <div class="content">
-      <h1>Welcome to Footlinks</h1>
-      <p>Find and book your favorite football courts with ease.</p>
-    </div>
+      <!-- Info Display -->
+      <p class="info-text">Booking court: <strong><%= court.name %></strong></p>
+      <p class="info-text">User: <strong><%= user._id %></strong></p>
+
+      <!-- Booking Fields -->
+      <label>Date</label>
+      <input type="date" name="date" required>
+
+      <label>Start Time</label>
+      <input type="time" name="startTime" required>
+
+      <label>End Time</label>
+      <input type="time" name="endTime" required>
+
+      <button type="submit">Book Now</button>
+    </form>
   </div>
 </body>
 </html>

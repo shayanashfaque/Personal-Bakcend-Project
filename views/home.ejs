@@ -8,102 +8,112 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      display: flex;
-      height: 100vh;
+      padding: 0;
       background: #f8f9fa;
     }
-
-    /* Sidebar */
-    .sidebar {
-      width: 200px;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
       background: #0a6847;
       color: #fff;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem;
     }
-    .sidebar h2 {
-      margin: 0 0 2rem;
-      text-align: center;
-      font-size: 1.2rem;
-      color: #fff;
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
     }
-    .sidebar a {
+    nav a {
+      margin-left: 1.5rem;
       color: #fff;
       text-decoration: none;
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
-      margin-bottom: 0.5rem;
-      transition: background 0.2s;
+      font-weight: bold;
     }
-    .sidebar a:hover {
-      background: #085c3f;
+    nav a:hover {
+      text-decoration: underline;
     }
-
-    /* Main content */
-    .main-content {
-      flex: 1;
+    .container {
       display: flex;
-      flex-direction: column;
+      min-height: calc(100vh - 70px);
     }
-
-    /* Topbar */
-    .topbar {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 1rem;
+    aside {
+      width: 220px;
       background: #fff;
-      border-bottom: 1px solid #ddd;
+      padding: 1.5rem;
+      border-right: 1px solid #ddd;
     }
-    .login-circle {
+    aside ul {
+      list-style: none;
+      padding: 0;
+    }
+    aside li {
+      margin: 1rem 0;
+    }
+    aside a {
+      color: #0a6847;
+      text-decoration: none;
+      font-size: 1.1rem;
+    }
+    aside a:hover {
+      text-decoration: underline;
+    }
+    main {
+      flex: 1;
+      padding: 2rem;
+    }
+    .welcome {
+      text-align: center;
+      margin-top: 5rem;
+    }
+    .welcome h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+    .welcome p {
+      color: #555;
+      font-size: 1.1rem;
+    }
+    .login-btn {
+      display: inline-block;
       width: 40px;
       height: 40px;
-      background: #0a6847;
-      color: #fff;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: #fff;
+      color: #0a6847;
+      text-align: center;
+      line-height: 40px;
       font-weight: bold;
       text-decoration: none;
-      transition: background 0.2s;
+      margin-left: 1rem;
     }
-    .login-circle:hover {
-      background: #085c3f;
-    }
-
-    /* Content body */
-    .content {
-      padding: 2rem;
-      flex: 1;
-    }
-    .content h1 {
-      color: #0a6847;
-      margin-bottom: 1rem;
+    .login-btn:hover {
+      background: #ddd;
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h2>Footlinks</h2>
-    <a href="/courts">Courts</a>
-    <a href="/booking">Bookings</a>
-  </div>
+  <header>
+    <h1>Footlinks</h1>
+    <nav>
+      <a href="/user/login" class="login-btn">L</a>
+    </nav>
+  </header>
 
-  <!-- Main -->
-  <div class="main-content">
-    <!-- Top bar -->
-    <div class="topbar">
-      <a href="/user/login" class="login-circle">L</a>
-    </div>
-
-    <!-- Body -->
-    <div class="content">
-      <h1>Welcome to Footlinks</h1>
-      <p>Find and book your favorite football courts with ease.</p>
-    </div>
+  <div class="container">
+    <aside>
+      <ul>
+        <li><a href="/courts">Courts</a></li>
+        <li><a href="/booking">Bookings</a></li>
+        <li><a href="/user/register">Register</a></li>
+      </ul>
+    </aside>
+    <main>
+      <div class="welcome">
+        <h2>Welcome to Footlinks ⚽</h2>
+        <p>Book your football court easily and manage your bookings in one place.</p>
+      </div>
+    </main>
   </div>
 </body>
 </html>

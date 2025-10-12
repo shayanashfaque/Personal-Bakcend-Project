@@ -7,72 +7,70 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #f8f9fa;
+      height: 100vh;
     }
     .register-card {
       background: #fff;
       padding: 2rem;
-      border-radius: 12px;
+      border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
     }
-    .register-card h2 {
+    h2 {
       text-align: center;
       margin-bottom: 1.5rem;
       color: #0a6847;
     }
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    .form-group label {
+    label {
       display: block;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.3rem;
       font-size: 0.9rem;
       color: #333;
     }
-    .form-group input {
+    input {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.7rem;
+      margin-bottom: 1rem;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 1rem;
     }
-    .form-group input:focus {
+    input:focus {
       outline: none;
       border-color: #0a6847;
       box-shadow: 0 0 4px rgba(10,104,71,0.4);
     }
-    .submit-btn {
+    button {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.8rem;
       background: #0a6847;
-      color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
+      color: #fff;
       font-size: 1rem;
       cursor: pointer;
-      margin-top: 1rem;
-      transition: 0.2s;
+      margin-top: 0.5rem;
     }
-    .submit-btn:hover {
+    button:hover {
       background: #085c3f;
     }
-    .login-link {
+    .extra-links {
       text-align: center;
       margin-top: 1rem;
       font-size: 0.9rem;
     }
-    .login-link a {
+    .extra-links a {
       color: #0a6847;
       text-decoration: none;
     }
-    .login-link a:hover {
+    .extra-links a:hover {
       text-decoration: underline;
     }
   </style>
@@ -81,31 +79,22 @@
   <div class="register-card">
     <h2>Create Account</h2>
     <form action="/user/register" method="POST">
-      <div class="form-group">
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" placeholder="Enter your name" required>
-      </div>
+      <label for="name">Full Name</label>
+      <input type="text" id="name" name="name" required>
 
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" required>
-      </div>
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required>
 
-      <div class="form-group">
-        <label for="phone">Phone</label>
-        <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
-      </div>
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" name="phone" required>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-      </div>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
 
-      <button type="submit" class="submit-btn">Register</button>
+      <button type="submit">Register</button>
     </form>
-
-    <div class="login-link">
-      <p>Already have an account? <a href="/user/login">Login here</a></p>
+    <div class="extra-links">
+      <p>Already have an account? <a href="/user/login">Login</a></p>
     </div>
   </div>
 </body>

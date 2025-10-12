@@ -1,89 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Footlinks - Add Court</title>
-  <link rel="stylesheet" href="/style.css" />
   <style>
     body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      background: #f8f9fa;
+      height: 100vh;
     }
     .court-card {
       background: #fff;
       padding: 2rem;
-      border-radius: 12px;
+      border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 500px;
-      text-align: center;
+      max-width: 420px;
     }
-    .court-card h2 {
+    h2 {
+      text-align: center;
       margin-bottom: 1.5rem;
       color: #0a6847;
     }
-    .form-group {
-      margin-bottom: 1rem;
-      text-align: left;
-    }
-    .form-group label {
+    label {
       display: block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
       font-size: 0.9rem;
       color: #333;
     }
-    .form-group input, .form-group textarea {
+    input {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.7rem;
+      margin-bottom: 1rem;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 1rem;
     }
-    .form-group textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-    .form-group input:focus, .form-group textarea:focus {
+    input:focus {
       outline: none;
       border-color: #0a6847;
       box-shadow: 0 0 4px rgba(10,104,71,0.4);
     }
-    .submit-btn {
+    button {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.8rem;
       background: #0a6847;
-      color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
+      color: #fff;
       font-size: 1rem;
       cursor: pointer;
-      margin-top: 1rem;
-      transition: 0.2s;
+      margin-top: 0.5rem;
     }
-    .submit-btn:hover {
+    button:hover {
       background: #085c3f;
+    }
+    .extra-links {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .extra-links a {
+      color: #0a6847;
+      text-decoration: none;
+    }
+    .extra-links a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="court-card">
-    <h2>Add a New Football Court</h2>
-    <form action="/add-court" method="POST">
-      <div class="form-group">
-        <label for="name">Court Name</label>
-        <input type="text" id="name" name="name" placeholder="Greenfield Arena" required />
-      </div>
-      <div class="form-group">
-        <label for="location">Location</label>
-        <input type="text" id="location" name="location" placeholder="Downtown City" required />
-      </div>
-      <div class="form-group">
-        <label for="price">Price (per hour)</label>
-        <input type="text" id="price" name="price" placeholder="$40/hr" required />
-      </div>
-      <div class="form-group">
-        <label for="img">Image URL</label>
+    <h2>Add New Court</h2>
+    <form action="/courts/new" method="POST">
+      <label for="name">Court Name</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="location">Location</label>
+      <input type="text" id="location" name="location" required>
+
+      <label for="pricePerHour">Price Per Hour</label>
+      <input type="number" id="pricePerHour" name="pricePerHour" required min="0">
+
+      <button type="submit">Add Court</button>
+    </form>
+    <div class="extra-links">
+      <p><a href="/courts">Back to Courts</a></p>
+    </div>
+  </div>
+</body>
+</html>

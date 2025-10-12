@@ -3,66 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Footlinks - Courts</title>
+  <title>Courts - Footlinks</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
       margin: 0;
-      padding: 2rem;
-      background: #f8f9fa;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-      color: #0a6847;
-    }
-    .court-list {
+      padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-      max-width: 600px;
-      margin: 0 auto;
+      align-items: center;
     }
+
+    h1 {
+      margin: 1.5rem 0;
+      color: #0a6847;
+      font-size: 2rem;
+    }
+
+    .courts-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+      width: 90%;
+      max-width: 1100px;
+      margin-bottom: 3rem;
+    }
+
     .court-card {
       background: #fff;
-      padding: 1.5rem;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      width: 300px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+      color: inherit;
+      display: block;
     }
-    .court-card h2 {
-      margin: 0;
-      color: #333;
+
+    .court-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     }
-    .court-card p {
-      margin: 0.5rem 0 1rem;
+
+    .court-image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background-color: #ddd;
+    }
+
+    .court-content {
+      padding: 1rem;
+    }
+
+    .court-content h3 {
+      color: #0a6847;
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .court-content p {
+      font-size: 0.95rem;
       color: #555;
+      margin-bottom: 0.3rem;
     }
+
     .book-btn {
       display: inline-block;
-      padding: 0.6rem 1.2rem;
-      background: #0a6847;
-      color: #fff;
+      background-color: #0a6847;
+      color: white;
       text-decoration: none;
+      padding: 0.5rem 1rem;
       border-radius: 6px;
-      transition: 0.2s;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      transition: background-color 0.2s;
     }
+
     .book-btn:hover {
-      background: #085c3f;
+      background-color: #085c3f;
     }
+
+    .add-court-link {
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .add-court-link a {
+      text-decoration: none;
+      color: #0a6847;
+      font-weight: bold;
+    }
+
+    .no-courts {
+      margin: 2rem;
+      color: #555;
+      font-size: 1.1rem;
+    }
+
   </style>
 </head>
 <body>
   <h1>Available Courts</h1>
 
-  <div class="court-list">
-    <% courts.forEach(court => { %>
-      <div class="court-card">
-        <h2><%= court.name %> - $<%= court.pricePerHour %>/hour</h2>
-        <p><%= court.location %></p>
-        <!-- Use param instead of query -->
-        <a class="book-btn" href="/booking/new/<%= court._id %>">Book Now</a>
-      </div>
-    <% }) %>
-  </div>
+  <% if (courts.length === 0) { %>
+    <p class="no-courts">No courts found</p>
+  <% } else { %>
+    <div class="courts-container">
+      <% courts.forEach(court => { %>
+        <a href="/courts/<%= court._id %>" class="court-card">
+          <img src="<%= court.imageUrl || 'https://via.placeholder.com/300x180?text=No+Image' %>" alt="<%= court.name %>" class="court-image">
+          <div class="court-content">
+            <h3><%= court.name %></h3>
+            <p><%= court.location %></p>
+            <p>$<%= court.pricePerHour %> per hour</p>
+            <a href="/booking/new/<%= court._id %>" class="book-btn">Book Now</a>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (user && (user.role === "Admin" || user.role === "Owner")) { %>
+    <div class="add-court-link">
+      <a href="/court/new">+ Add New Court</a>
+    </div>
+  <% } %>
 </body>
 </html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Receipt - Footlinks</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .receipt-card {
+      background: #fff;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 95%;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #0a6847;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #333;
+      margin: 0.5rem 0;
+    }
+
+    strong {
+      color: #0a6847;
+    }
+
+    .amount {
+      font-size: 1.3rem;
+      color: #d9534f;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 1.8rem;
+      background: #0a6847;
+      color: white;
+      text-decoration: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    a:hover {
+      background: #085c3f;
+    }
+
+    .emoji {
+      font-size: 2.5rem;
+    }
+
+    .divider {
+      height: 1px;
+      background: #ddd;
+      margin: 1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt-card">
+    <div class="emoji">✅</div>
+    <h1>Booking Confirmed!</h1>
+
+    <p>You booked <strong><%= booking.court.name %></strong></p>
+    <p>📍 Location: <%= booking.court.location %></p>
+    <p>💵 Rate: $<%= booking.court.pricePerHour %>/hour</p>
+
+    <div class="divider"></div>
+
+    <p>📅 Date: <%= booking.date.toDateString() %></p>
+    <p>⏰ Time: <%= booking.startTime %> - <%= booking.endTime %></p>
+
+    <div class="divider"></div>
+
+    <p>👤 Booked By: <strong><%= booking.user.name %></strong></p>
+    <p>📞 Phone: <%= booking.user.phonenumber %></p>
+    <p>📧 Email: <%= booking.user.email %></p>
+
+    <div class="amount">
+      Estimated Total: $<%= booking.court.pricePerHour %>
+    </div>
+
+    <a href="/booking">View All My Bookings</a>
+  </div>
+</body>
+</html>

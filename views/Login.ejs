@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Footlinks - Login</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #f4f4f4;
-      margin: 0;
     }
-    .container {
+    .login-card {
       background: #fff;
       padding: 2rem;
-      border-radius: 8px;
+      border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       width: 100%;
       max-width: 400px;
@@ -25,49 +26,57 @@
     h2 {
       text-align: center;
       margin-bottom: 1.5rem;
-      color: #333;
+      color: #0a6847;
     }
     label {
       display: block;
-      margin: 0.5rem 0 0.3rem;
+      margin-bottom: 0.3rem;
       font-size: 0.9rem;
+      color: #333;
     }
     input {
       width: 100%;
-      padding: 0.6rem;
+      padding: 0.7rem;
       margin-bottom: 1rem;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    input:focus {
+      outline: none;
+      border-color: #0a6847;
+      box-shadow: 0 0 4px rgba(10,104,71,0.4);
     }
     button {
       width: 100%;
-      padding: 0.7rem;
+      padding: 0.8rem;
       background: #0a6847;
-      color: #fff;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
+      color: #fff;
       font-size: 1rem;
       cursor: pointer;
+      margin-top: 0.5rem;
     }
     button:hover {
       background: #085c3f;
     }
-    .register-link {
-      margin-top: 1rem;
+    .extra-links {
       text-align: center;
+      margin-top: 1rem;
       font-size: 0.9rem;
     }
-    .register-link a {
+    .extra-links a {
       color: #0a6847;
       text-decoration: none;
     }
-    .register-link a:hover {
+    .extra-links a:hover {
       text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="login-card">
     <h2>Login</h2>
     <form action="/user/login" method="POST">
       <label for="email">Email</label>
@@ -78,8 +87,8 @@
 
       <button type="submit">Login</button>
     </form>
-    <div class="register-link">
-      <p>Don't have an account? <a href="/user/register">Register here</a></p>
+    <div class="extra-links">
+      <p>Don't have an account? <a href="/user/register">Register</a></p>
     </div>
   </div>
 </body>
