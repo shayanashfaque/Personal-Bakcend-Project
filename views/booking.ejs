@@ -1,84 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Footlinks - My Bookings</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Bookings | Footlinks</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
       margin: 0;
-      padding: 0;
-      background: #f8f9fa;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    .booking-list {
-      background: #fff;
-      margin-top: 3rem;
       padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 700px;
     }
-    h2 {
+
+    h1 {
       text-align: center;
-      margin-bottom: 1.5rem;
       color: #0a6847;
+      margin-bottom: 2rem;
     }
-    .booking-item {
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      background: #fdfdfd;
+
+    .bookings-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    .booking-item h3 {
+
+    .no-bookings {
+      text-align: center;
+      color: #777;
+      font-size: 1.1rem;
+      padding: 2rem 0;
+    }
+
+    .booking-card {
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid #ddd;
+      padding: 1rem 0;
+    }
+
+    .booking-card:last-child {
+      border-bottom: none;
+    }
+
+    .booking-card h3 {
       margin: 0;
+      color: #0a6847;
       font-size: 1.2rem;
-      color: #0a6847;
     }
-    .booking-item p {
-      margin: 0.3rem 0;
+
+    .booking-info {
       color: #333;
+      margin: 0.3rem 0;
+      font-size: 0.95rem;
     }
-    .extra-links {
-      text-align: center;
-      margin-top: 1rem;
-      font-size: 0.9rem;
+
+    .booking-actions {
+      margin-top: 0.5rem;
     }
-    .extra-links a {
-      color: #0a6847;
+
+    .receipt-link {
+      background: #0a6847;
+      color: white;
       text-decoration: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: background 0.2s ease;
     }
-    .extra-links a:hover {
-      text-decoration: underline;
+
+    .receipt-link:hover {
+      background: #085c3f;
     }
   </style>
 </head>
 <body>
-  <div class="booking-list">
-    <h2>My Bookings</h2>
+  <h1>My Bookings</h1>
 
+  <div class="bookings-container">
     <% if (bookings.length === 0) { %>
-      <p style="text-align:center; color:#555;">No bookings yet. <a href="/courts">Book a court now</a>.</p>
+      <p class="no-bookings">You have no bookings yet.</p>
     <% } else { %>
-      <% bookings.forEach(booking => { %>
-        <div class="booking-item">
-          <h3><%= booking.court.name %></h3>
-          <p><strong>Date:</strong> <%= booking.date.toDateString() %></p>
-          <p><strong>Time:</strong> <%= booking.startTime %> - <%= booking.endTime %></p>
-          <p><strong>Location:</strong> <%= booking.court.location %></p>
+      <% bookings.forEach(b => { %>
+        <div class="booking-card">
+          <h3><%= b.court.name %></h3>
+          <p class="booking-info">
+            📍 <%= b.court.location %><br>
+            ⏰ <%= b.startTime %> - <%= b.endTime %><br>
+            📅 <%= b.date ? new Date(b.date).toLocaleDateString() : "N/A" %>
+          </p>
+          <div class="booking-actions">
+            <a href="/receipt/<%= b._id %>" class="receipt-link">View Receipt</a>
+          </div>
         </div>
       <% }) %>
     <% } %>
-
-    <div class="extra-links">
-      <p><a href="/courts">Back to Courts</a></p>
-    </div>
   </div>
 </body>
 </html>

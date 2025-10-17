@@ -5,7 +5,7 @@ const app = express()
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
-
+const { isValidObjectId } = require('mongoose');
 const SECRET = process.env.JWT_SECRET
 
 
@@ -33,24 +33,23 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(cookieParser());
 app.use((req, res, next) => {
-  res.locals.user = req.user ||null; // EJS now always has user available
-  next();
-});
-app.use((req, res, next) => {
   const token = req.cookies.token;
   if (token) {
     try {
       const decoded = jwt.verify(token, SECRET);
-      res.locals.user = decoded;
       req.user = decoded;
+      res.locals.user = decoded;
     } catch (err) {
+      req.user = null;
       res.locals.user = null;
     }
   } else {
+    req.user = null;
     res.locals.user = null;
   }
   next();
 });
+
 
 
 function authMiddlewareOptional(req, res, next) {
@@ -81,18 +80,16 @@ const Court = mongoose.model('Court', {
   name: String,
   location: String,
   pricePerHour: Number,
-  available: { type: Boolean, default: true },
-  image:[String],
+  images:[String],
   owner:{type:mongoose.Schema.Types.ObjectId,ref:"User"},
- slots: [
-  {
-    startTime: String,
-    endTime: String,
-    price: Number,
-    isBooked: { type: Boolean, default: false },
-    bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
-  }
-]
+  ratings: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      rating: { type: Number, min: 1, max: 5 },
+      comment: String,
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
 
 })
 //User model
@@ -100,7 +97,7 @@ const User=mongoose.model('User',{
    
   phonenumber:String,
   name:String,
-   email: String,
+   email: {type:String, unique:true, required:true},
    password:String, 
    role:{type:String, default:"User" }
 })
@@ -108,10 +105,22 @@ const User=mongoose.model('User',{
 const Booking=mongoose.model('Booking',{
   user:{type: mongoose.Schema.Types.ObjectId, ref:"User"},
   court:{type: mongoose.Schema.Types.ObjectId, ref:"Court"},
-  date:Date,
-  startTime:String,
-  endTime: String
+   slot: { type: mongoose.Schema.Types.ObjectId, ref: "Slot" },
+  createdAt: { type: Date, default: Date.now }
 })
+const Slot = mongoose.model("Slot",{
+  court: { type: mongoose.Schema.Types.ObjectId, ref: "Court" },
+  date: { type: Date, required: true },
+  startTime: String,
+  endTime: String,
+  price: Number,
+  isBooked: { type: Boolean, default: false },
+  bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
+});
+
+
+
+
 
 app.get('/', (req, res) => {
   res.render('home'); 
@@ -149,44 +158,104 @@ app.post("/courts/new", authMiddleware, adminOrOwnerOnly, async (req, res) => {
   res.redirect("/courts");
 });
 
+
+
+// Updated /courts/:id route
 app.get("/courts/:id", authMiddleware, async (req, res, next) => {
   try {
-    const court = await Court.findById(req.params.id);
-    if (!court) return res.status(404).render("error", { message: "Court not found" });
-    res.render("court-details", { court, user: req.user });
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).render("error", { message: "Invalid court ID. Please check the URL." });
+    }
+    
+    const court = await Court.findById(id);
+    if (!court) {
+      return res.status(404).render("error", { message: "Court not found" });
+    }
+    
+    let slots = [];  // Default to an empty array
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(today);
+      endOfToday.setHours(23, 59, 59, 999);
+      
+      slots = await Slot.find({
+        court: id,
+        date: { $gte: today, $lte: endOfToday },
+      }).sort("startTime");
+      
+      console.log(`Fetched slots for court ${id}:`, slots);  // Debugging log
+    } catch (slotError) {
+      console.error("Error fetching slots:", slotError);
+    }
+    
+    // Calculate average rating
+    const averageRating = calculateAverageRating(court.ratings);
+    
+    // Render the template with all variables
+    res.render("court-details", { court, slots, user: req.user, averageRating });
   } catch (err) {
     console.error("Court detail error:", err);
     next(err);
   }
 });
-app.post("/courts/:courtId/book/:slotId", authMiddleware, async (req, res, next) => {
+
+// ... (rest of your code continues)
+
+
+app.get("/courts/:id/slots", async (req, res) => {
   try {
-    const court = await Court.findById(req.params.courtId);
-    if (!court) return res.status(404).render("error", { message: "Court not found" });
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ error: "Date required" });
 
-    const slot = court.slots.id(req.params.slotId);
-    if (!slot) return res.status(404).render("error", { message: "Slot not found" });
-    if (slot.isBooked) return res.status(400).render("error", { message: "Slot already booked" });
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
 
-    // Mark slot as booked
+    const slots = await Slot.find({
+      court: req.params.id,
+      date: { $gte: start, $lte: end },
+    }).sort("startTime");
+
+    res.json(slots);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+app.post("/courts/:id/book/:slotId", authMiddleware, async (req, res, next) => {
+  try {
+    // 1️⃣ Fetch slot and court
+    const slot = await Slot.findById(req.params.slotId).populate("court");
+    if (!slot || slot.isBooked) {
+      return res.status(400).render("error", { message: "Slot not available" });
+    }
+
+    // 2️⃣ Mark as booked
     slot.isBooked = true;
     slot.bookedBy = req.user.id;
-    await court.save();
+    await slot.save();
 
-    // Optionally create a Booking document
+    // 3️⃣ Create a Booking record
     const booking = new Booking({
       user: req.user.id,
-      court: court._id,
-      date: new Date(),
-      startTime: slot.startTime,
-      endTime: slot.endTime,
+      court: slot.court._id,
+      slot: slot._id,
     });
     await booking.save();
 
-    // Mock payment success
-    res.render("receipt", { user: req.user, court, slot });
+    // 4️⃣ Generate receipt page
+    res.render("receipt", {
+      user: req.user,
+      court: slot.court,
+      slot,
+      booking,
+      message: "Booking confirmed successfully!",
+    });
   } catch (err) {
-    console.error("Booking error:", err);
+    console.error("❌ Booking error:", err);
     next(err);
   }
 });
@@ -261,6 +330,43 @@ app.post('/user/register', async (req, res) => {
 
   res.redirect('/user/login'); // go to login after registering
 });
+app.post("/courts/:id/rate", authMiddleware, async (req, res) => {
+  const { rating, comment } = req.body;
+  const court = await Court.findById(req.params.id);
+
+  if (!court) return res.status(404).render("error", { message: "Court not found" });
+
+  // Prevent double-rating
+  const existing = court.ratings.find(r => r.user.toString() === req.user._id.toString());
+  if (existing) {
+    existing.rating = rating;
+    existing.comment = comment;
+  } else {
+    court.ratings.push({ user: req.user._id, rating, comment });
+  }
+
+  await court.save();
+  res.redirect("/courts");
+});
+
+app.get("/history", authMiddleware, async (req, res) => {
+  try {
+    const bookings = await Booking.find({ user: req.user.id })
+      .populate("court")
+      .populate("slot");
+
+    // Example logic: show only past slots (before now)
+    const now = new Date();
+    const pastBookings = bookings.filter(
+      b => new Date(b.slot.date).getTime() < now.getTime()
+    );
+
+    res.render("history", { bookings: pastBookings, user: req.user });
+  } catch (err) {
+    console.error("❌ History fetch error:", err);
+    res.status(500).render("error", { message: "Unable to load history." });
+  }
+});
 
 
 app.get('/booking', authMiddleware, async (req, res) => {
@@ -301,21 +407,13 @@ function authMiddleware(req, res, next) {
     res.redirect("/user/login");
   }
 }
-
-app.use((req, res, next) => {
-  const token = req.cookies.token;
-  if (token) {
-    try {
-      res.locals.user = jwt.verify(token, SECRET);
-    } catch {
-      res.locals.user = null;
-    }
-  } else {
-    res.locals.user = null;
+const calculateAverageRating = (ratings) => {
+  if (!ratings || ratings.length === 0) {
+    return 0; // Return 0 if no ratings
   }
-  next();
-});
-
+  const total = ratings.reduce((sum, r) => sum + r.rating, 0);
+  return (total / ratings.length).toFixed(1); // Return as a string with 1 decimal place
+};
 
 // ---------------------
 // Start Server

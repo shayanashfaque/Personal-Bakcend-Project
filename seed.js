@@ -1,69 +1,107 @@
-// seed.js
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
 require("dotenv").config();
 
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch(err => console.error("❌ MongoDB error:", err));
-
-// ----------------------
-// Schemas
-// ----------------------
+// ===== Models =====
 const User = mongoose.model("User", {
   phonenumber: String,
   name: String,
   email: String,
   password: String,
-  role: { type: String, default: "User" }
+  role: { type: String, default: "User" },
 });
 
 const Court = mongoose.model("Court", {
   name: String,
   location: String,
   pricePerHour: Number,
-  available: { type: Boolean, default: true },
-  images: { type: [String], default: [] },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
+  images: [String],
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
-// ----------------------
-// Seed Function
-// ----------------------
-async function seed() {
+const Slot = mongoose.model("Slot", {
+  court: { type: mongoose.Schema.Types.ObjectId, ref: "Court" },
+  date: { type: Date, required: true },
+  startTime: String,
+  endTime: String,
+  price: Number,
+  isBooked: { type: Boolean, default: false },
+  bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+});
+
+// ===== Seeder =====
+(async () => {
   try {
-    // 1️⃣ Clear old users and courts
-    await User.deleteMany();
-    await Court.deleteMany();
-    console.log("🗑️ Cleared old users and courts");
+    console.log("🔌 Connecting to MongoDB...");
+    await mongoose.connect(process.env.MONGO_URL);
+    console.log("✅ Connected to MongoDB");
 
-    // 2️⃣ Create demo admin user
-    const hashedPassword = await bcrypt.hash("admin123", 10);
-    const adminUser = new User({
-      name: "Admin Demo",
-      phonenumber: "0000000000",
-      email: "admin@example.com",
-      password: hashedPassword,
-      role: "Admin"
-    });
-    await adminUser.save();
-    console.log("✅ Demo admin user created:", adminUser.email);
+    // Clear old data
+    await Promise.all([Court.deleteMany({}), Slot.deleteMany({})]);
+    console.log("🧹 Old courts and slots cleared.");
 
-    // 3️⃣ Seed demo courts with admin as owner
-    const courtsData = [
-      { name: "City Arena", location: "Downtown", pricePerHour: 50, images: [], owner: adminUser._id },
-      { name: "East Side Pitch", location: "East District", pricePerHour: 40, images: [], owner: adminUser._id },
-      { name: "West Turf", location: "West End", pricePerHour: 60, images: [], owner: adminUser._id },
+    // Ensure at least one Owner exists
+    let owners = await User.find({ role: "Owner" });
+    if (owners.length === 0) {
+      console.log("⚠️ No owners found — creating a mock Owner user...");
+      const defaultOwner = await User.create({
+        name: "Mock Owner",
+        email: "mockowner@example.com",
+        phonenumber: "0000000000",
+        password: "mockpassword",
+        role: "Owner",
+      });
+      owners = [defaultOwner];
+      console.log(`✅ Created default owner: ${defaultOwner.email}`);
+    }
+
+    // Courts (no manual _id!)
+    const courtData = [
+      { name: "Sunset Arena", location: "Los Angeles, CA", pricePerHour: 50, images: ["sunset1.jpg", "sunset2.jpg"], owner: owners[0]._id },
+      { name: "Downtown Sports Hub", location: "New York, NY", pricePerHour: 70, images: ["downtown1.jpg", "downtown2.jpg"], owner: owners[0]._id },
+      { name: "Palm Court", location: "Miami, FL", pricePerHour: 60, images: ["palm1.jpg"], owner: owners[0]._id },
+      { name: "Greenwood Arena", location: "Seattle, WA", pricePerHour: 55, images: ["greenwood.jpg"], owner: owners[0]._id },
+      { name: "Highpoint Courts", location: "Denver, CO", pricePerHour: 65, images: ["highpoint1.jpg", "highpoint2.jpg"], owner: owners[0]._id },
     ];
 
-    await Court.insertMany(courtsData);
-    console.log("✅ Demo courts added with admin as owner");
+    const courts = await Court.insertMany(courtData);
+    console.log(`✅ Inserted ${courts.length} courts.`);
 
+    // Slots (7 days × 5 slots per day per court)
+    const slotTimes = [
+      { startTime: "08:00", endTime: "09:00" },
+      { startTime: "09:00", endTime: "10:00" },
+      { startTime: "10:00", endTime: "11:00" },
+      { startTime: "11:00", endTime: "12:00" },
+      { startTime: "12:00", endTime: "13:00" },
+    ];
+
+    const today = new Date();
+    const slotsToInsert = [];
+
+    courts.forEach((court) => {
+      for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + dayOffset);
+
+        slotTimes.forEach((t) => {
+          slotsToInsert.push({
+            court: court._id,
+            date,
+            startTime: t.startTime,
+            endTime: t.endTime,
+            price: court.pricePerHour,
+          });
+        });
+      }
+    });
+
+    const slots = await Slot.insertMany(slotsToInsert);
+    console.log(`✅ Inserted ${slots.length} slots (${courts.length * 35} total expected).`);
+
+    console.log("🎉 Mock owner, courts, and slots generated successfully!");
+    process.exit(0);
   } catch (err) {
-    console.error("❌ Seeding error:", err);
-  } finally {
-    mongoose.disconnect();
+    console.error("❌ Error seeding data:", err.message);
+    process.exit(1);
   }
-}
-
-seed();
+})();

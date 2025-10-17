@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Booking History - Footlinks</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      padding: 2rem;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0a6847;
+      margin-bottom: 2rem;
+    }
+
+    .booking {
+      background: white;
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      margin: 1rem auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 750px;
+      line-height: 1.6;
+    }
+
+    .booking h3 {
+      margin-top: 0;
+      color: #0a6847;
+      font-size: 1.3rem;
+    }
+
+    .booking p {
+      margin: 0.4rem 0;
+      color: #333;
+    }
+
+    form {
+      margin-top: 0.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    select, input, button {
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    input {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    button {
+      background-color: #0a6847;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #085c3f;
+    }
+
+    .no-bookings {
+      text-align: center;
+      color: #666;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Your Booking History</h1>
+
+  <% if (!bookings || bookings.length === 0) { %>
+    <p class="no-bookings">You have no past bookings.</p>
+  <% } else { %>
+    <% bookings.forEach(b => { %>
+      <div class="booking">
+        <h3><%= b.court ? b.court.name : "Unknown Court" %></h3>
+        <p><%= b.court ? b.court.location : "Location unavailable" %></p>
+        <% if (b.slot) { %>
+          <p>
+            Date: <%= new Date(b.slot.date).toDateString() %> |
+            <%= b.slot.startTime %> - <%= b.slot.endTime %>
+          </p>
+        <% } else { %>
+          <p><em>Slot details unavailable.</em></p>
+        <% } %>
+
+        <form action="/courts/<%= b.court ? b.court._id : '' %>/rate" method="POST">
+          <label>Rate this court:</label>
+          <select name="rating" required>
+            <option value="">Select</option>
+            <% for (let i = 1; i <= 5; i++) { %>
+              <option value="<%= i %>"><%= i %> ★</option>
+            <% } %>
+          </select>
+          <input type="text" name="comment" placeholder="Leave a comment">
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    <% }) %>
+  <% } %>
+</body>
+</html>

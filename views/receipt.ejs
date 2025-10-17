@@ -3,103 +3,124 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Booking Receipt - Footlinks</title>
+  <title>Booking Receipt | Footlinks</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f8f9fa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      background-color: #f8f9fa;
       margin: 0;
+      padding: 2rem;
     }
 
-    .receipt-card {
+    .receipt-container {
+      max-width: 600px;
+      margin: 2rem auto;
       background: #fff;
-      padding: 2.5rem;
+      padding: 2rem;
       border-radius: 16px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 95%;
-      max-width: 480px;
       text-align: center;
     }
 
     h1 {
       color: #0a6847;
-      font-size: 1.8rem;
       margin-bottom: 1rem;
     }
 
-    p {
-      font-size: 1rem;
+    h3 {
+      margin-top: 1.5rem;
       color: #333;
-      margin: 0.5rem 0;
     }
 
-    strong {
+    .info {
+      text-align: left;
+      margin: 1.5rem 0;
+      font-size: 1rem;
+      color: #444;
+      line-height: 1.6;
+    }
+
+    .info strong {
       color: #0a6847;
     }
 
-    .amount {
-      font-size: 1.3rem;
-      color: #d9534f;
-      margin-top: 1rem;
-      font-weight: bold;
+    .divider {
+      border: none;
+      height: 1px;
+      background-color: #ddd;
+      margin: 1.5rem 0;
     }
 
-    a {
+    .status {
+      background: #e8f5e9;
+      color: #0a6847;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
       display: inline-block;
-      margin-top: 1.8rem;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+
+    .booking-id {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 1.5rem;
       background: #0a6847;
       color: white;
-      text-decoration: none;
-      padding: 0.7rem 1.5rem;
+      padding: 0.6rem 1.2rem;
       border-radius: 8px;
+      text-decoration: none;
       font-weight: 500;
-      transition: 0.2s;
+      transition: background 0.2s ease;
     }
 
-    a:hover {
+    .btn:hover {
       background: #085c3f;
     }
 
-    .emoji {
-      font-size: 2.5rem;
-    }
-
-    .divider {
-      height: 1px;
-      background: #ddd;
-      margin: 1.5rem 0;
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+      }
+      .receipt-container {
+        box-shadow: none;
+        border: 1px solid #ccc;
+      }
+      .btn, .no-print {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="receipt-card">
-    <div class="emoji">✅</div>
-    <h1>Booking Confirmed!</h1>
+  <div class="receipt-container">
+    <h1>✅ Booking Confirmed!</h1>
+    <p>Thank you, <strong><%= user.name %></strong>!</p>
 
-    <p>You booked <strong><%= booking.court.name %></strong></p>
-    <p>📍 Location: <%= booking.court.location %></p>
-    <p>💵 Rate: $<%= booking.court.pricePerHour %>/hour</p>
-
-    <div class="divider"></div>
-
-    <p>📅 Date: <%= booking.date.toDateString() %></p>
-    <p>⏰ Time: <%= booking.startTime %> - <%= booking.endTime %></p>
-
-    <div class="divider"></div>
-
-    <p>👤 Booked By: <strong><%= booking.user.name %></strong></p>
-    <p>📞 Phone: <%= booking.user.phonenumber %></p>
-    <p>📧 Email: <%= booking.user.email %></p>
-
-    <div class="amount">
-      Estimated Total: $<%= booking.court.pricePerHour %>
+    <h3>Booking Details</h3>
+    <div class="info">
+      <p><strong>Court:</strong> <%= court.name %></p>
+      <p><strong>Location:</strong> <%= court.location %></p>
+      <p><strong>Date:</strong> <%= new Date(slot.date).toLocaleDateString() %></p>
+      <p><strong>Time:</strong> <%= slot.startTime %> - <%= slot.endTime %></p>
+      <p><strong>Price:</strong> $<%= slot.price %></p>
     </div>
 
-    <a href="/booking">View All My Bookings</a>
+    <hr class="divider">
+
+    <div class="status">Status: Confirmed ✅</div>
+    <div class="booking-id">Booking ID: <%= booking._id %></div>
+
+    <div class="no-print">
+      <a href="/booking" class="btn">View My Bookings</a>
+      <button onclick="window.print()" class="btn" style="margin-left: 0.5rem;">🖨️ Print Receipt</button>
+    </div>
   </div>
 </body>
 </html>

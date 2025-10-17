@@ -11,6 +11,7 @@
       padding: 0;
       background: #f8f9fa;
     }
+    
     header {
       display: flex;
       justify-content: space-between;
@@ -19,61 +20,85 @@
       background: #0a6847;
       color: #fff;
     }
+    
     header h1 {
       margin: 0;
       font-size: 1.5rem;
     }
+    
     nav a {
       margin-left: 1.5rem;
       color: #fff;
       text-decoration: none;
       font-weight: bold;
     }
+    
     nav a:hover {
       text-decoration: underline;
     }
+    
     .container {
       display: flex;
-      min-height: calc(100vh - 70px);
+      min-height: calc(100vh - 70px); /* Adjusted for header height */
     }
+    
     aside {
       width: 220px;
       background: #fff;
       padding: 1.5rem;
       border-right: 1px solid #ddd;
     }
+    
     aside ul {
       list-style: none;
       padding: 0;
     }
+    
     aside li {
       margin: 1rem 0;
     }
+    
     aside a {
       color: #0a6847;
       text-decoration: none;
       font-size: 1.1rem;
     }
+    
     aside a:hover {
       text-decoration: underline;
     }
+    
     main {
       flex: 1;
+      display: flex; /* Use flex to center the card */
+      justify-content: center; /* Center horizontally */
+      align-items: center; /* Center vertically */
       padding: 2rem;
+      background: #f8f9fa; /* Subtle background for emphasis */
     }
-    .welcome {
-      text-align: center;
-      margin-top: 5rem;
+    
+    .card {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px; /* Rounded corners for card effect */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+      max-width: 600px; /* Limit width for better readability */
+      width: 100%; /* Full width on smaller screens */
+      text-align: center; /* Center text inside the card */
     }
-    .welcome h2 {
+    
+    .card h2 {
       font-size: 2rem;
       margin-bottom: 1rem;
       color: #333;
     }
-    .welcome p {
+    
+    .card p {
       color: #555;
       font-size: 1.1rem;
+      margin-bottom: 1.5rem; /* Add space below paragraph */
     }
+    
     .login-btn {
       display: inline-block;
       width: 40px;
@@ -87,6 +112,7 @@
       text-decoration: none;
       margin-left: 1rem;
     }
+    
     .login-btn:hover {
       background: #ddd;
     }
@@ -105,11 +131,12 @@
       <ul>
         <li><a href="/courts">Courts</a></li>
         <li><a href="/booking">Bookings</a></li>
+        <li><a href="/history">History</a></li> <!-- Added History link -->
         <li><a href="/user/register">Register</a></li>
       </ul>
     </aside>
     <main>
-      <div class="welcome">
+      <div class="card"> <!-- Wrapped welcome content in a card div -->
         <h2>Welcome to Footlinks ⚽</h2>
         <p>Book your football court easily and manage your bookings in one place.</p>
       </div>
