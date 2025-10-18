@@ -38,6 +38,19 @@
       color: #333;
     }
 
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-active { background-color: #d4edda; color: #155724; }  /* Green */
+    .status-canceled { background-color: #f8d7da; color: #721c24; }  /* Red */
+    .status-expired { background-color: #fff3cd; color: #856404; }  /* Yellow/Orange */
+
     form {
       margin-top: 0.8rem;
       display: flex;
@@ -97,17 +110,29 @@
           <p><em>Slot details unavailable.</em></p>
         <% } %>
 
-        <form action="/courts/<%= b.court ? b.court._id : '' %>/rate" method="POST">
-          <label>Rate this court:</label>
-          <select name="rating" required>
-            <option value="">Select</option>
-            <% for (let i = 1; i <= 5; i++) { %>
-              <option value="<%= i %>"><%= i %> ★</option>
-            <% } %>
-          </select>
-          <input type="text" name="comment" placeholder="Leave a comment">
-          <button type="submit">Submit</button>
-        </form>
+        <!-- Status badge: Shows canceled/expired marks -->
+        <div class="status-badge 
+          <%= b.status === 'active' ? 'status-active' : 
+             b.status === 'canceled' ? 'status-canceled' : 
+             'status-expired' %>">
+          <%= b.status === 'canceled' ? `Canceled by ${b.canceledBy}` : 
+             b.status === 'expired' ? 'Expired' : 'Active' %>
+        </div>
+
+        <!-- Rating form: Only show for active or expired bookings (not canceled) -->
+        <% if (b.status !== 'canceled') { %>
+          <form action="/courts/<%= b.court ? b.court._id : '' %>/rate" method="POST">
+            <label>Rate this court:</label>
+            <select name="rating" required>
+              <option value="">Select</option>
+              <% for (let i = 1; i <= 5; i++) { %>
+                <option value="<%= i %>"><%= i %> ★</option>
+              <% } %>
+            </select>
+            <input type="text" name="comment" placeholder="Leave a comment">
+            <button type="submit">Submit</button>
+          </form>
+        <% } %>
       </div>
     <% }) %>
   <% } %>

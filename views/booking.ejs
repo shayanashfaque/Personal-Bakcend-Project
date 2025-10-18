@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Bookings | Footlinks</title>
+  <meta charset="UTF-8">
+  <title>My Current Bookings - Footlinks</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #f8f9fa;
-      margin: 0;
       padding: 2rem;
+      margin: 0;
     }
 
     h1 {
@@ -18,85 +17,79 @@
       margin-bottom: 2rem;
     }
 
-    .bookings-container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    .booking {
+      background: white;
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      margin: 1rem auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 750px;
+      line-height: 1.6;
     }
+
+    .booking h3 {
+      margin-top: 0;
+      color: #0a6847;
+      font-size: 1.3rem;
+    }
+
+    .booking p {
+      margin: 0.4rem 0;
+      color: #333;
+    }
+
+    .cancel-btn, .receipt-btn {
+      background-color: #0a6847;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      margin-top: 0.8rem;
+      margin-right: 0.5rem;
+      transition: background-color 0.2s ease;
+    }
+
+    .cancel-btn:hover { background-color: #085c3f; }
+    .receipt-btn:hover { background-color: #085c3f; }
 
     .no-bookings {
       text-align: center;
-      color: #777;
-      font-size: 1.1rem;
-      padding: 2rem 0;
-    }
-
-    .booking-card {
-      display: flex;
-      flex-direction: column;
-      border-bottom: 1px solid #ddd;
-      padding: 1rem 0;
-    }
-
-    .booking-card:last-child {
-      border-bottom: none;
-    }
-
-    .booking-card h3 {
-      margin: 0;
-      color: #0a6847;
-      font-size: 1.2rem;
-    }
-
-    .booking-info {
-      color: #333;
-      margin: 0.3rem 0;
-      font-size: 0.95rem;
-    }
-
-    .booking-actions {
-      margin-top: 0.5rem;
-    }
-
-    .receipt-link {
-      background: #0a6847;
-      color: white;
-      text-decoration: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-
-    .receipt-link:hover {
-      background: #085c3f;
+      color: #666;
+      margin-top: 3rem;
     }
   </style>
 </head>
 <body>
-  <h1>My Bookings</h1>
+  <h1>My Current Bookings</h1>
 
-  <div class="bookings-container">
-    <% if (bookings.length === 0) { %>
-      <p class="no-bookings">You have no bookings yet.</p>
-    <% } else { %>
-      <% bookings.forEach(b => { %>
-        <div class="booking-card">
-          <h3><%= b.court.name %></h3>
-          <p class="booking-info">
-            📍 <%= b.court.location %><br>
-            ⏰ <%= b.startTime %> - <%= b.endTime %><br>
-            📅 <%= b.date ? new Date(b.date).toLocaleDateString() : "N/A" %>
+  <% if (!bookings || bookings.length === 0) { %>
+    <p class="no-bookings">You have no active bookings.</p>
+  <% } else { %>
+    <% bookings.forEach(b => { %>
+      <div class="booking">
+        <h3><%= b.court ? b.court.name : "Unknown Court" %></h3>
+        <p><%= b.court ? b.court.location : "Location unavailable" %></p>
+        <% if (b.slot) { %>
+          <p>
+            Date: <%= new Date(b.slot.date).toLocaleDateString() %> |
+            Time: <%= b.slot.startTime %> - <%= b.slot.endTime %> |
+            Price: $<%= b.slot.price || 'N/A' %>
           </p>
-          <div class="booking-actions">
-            <a href="/receipt/<%= b._id %>" class="receipt-link">View Receipt</a>
-          </div>
-        </div>
-      <% }) %>
-    <% } %>
-  </div>
+        <% } else { %>
+          <p><em>Slot details unavailable.</em></p>
+        <% } %>
+
+        <!-- View Receipt button -->
+        <a href="/receipt/<%= b._id %>" class="receipt-btn">View Receipt</a>
+
+        <!-- Cancel button -->
+        <form action="/bookings/<%= b._id %>/cancel" method="POST" style="display: inline;">
+          <button type="submit" class="cancel-btn" onclick="return confirm('Are you sure you want to cancel this booking?')">Cancel Booking</button>
+        </form>
+      </div>
+    <% }) %>
+  <% } %>
 </body>
 </html>

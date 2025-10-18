@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 const { isValidObjectId } = require('mongoose');
 const SECRET = process.env.JWT_SECRET
 
+const cron = require('node-cron');  
 
 const port = process.env.PORT || 3000
 const multer = require("multer");
@@ -106,8 +107,13 @@ const Booking=mongoose.model('Booking',{
   user:{type: mongoose.Schema.Types.ObjectId, ref:"User"},
   court:{type: mongoose.Schema.Types.ObjectId, ref:"Court"},
    slot: { type: mongoose.Schema.Types.ObjectId, ref: "Slot" },
-  createdAt: { type: Date, default: Date.now }
-})
+  createdAt: { type: Date, default: Date.now },
+  status: { type: String, enum: ['active', 'canceled', 'expired'], default: 'active' },  // New: Track status
+  canceledBy: { type: String, enum: ['user', 'owner'], default: null },  // New: Who canceled it
+  
+});
+
+
 const Slot = mongoose.model("Slot",{
   court: { type: mongoose.Schema.Types.ObjectId, ref: "Court" },
   date: { type: Date, required: true },
@@ -259,6 +265,32 @@ app.post("/courts/:id/book/:slotId", authMiddleware, async (req, res, next) => {
     next(err);
   }
 });
+// Route to handle GET /receipt/:id
+app.get('/receipt/:id', async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    // Fetch the booking and populate related fields
+    const booking = await Booking.findById(bookingId)
+      .populate('court')  // Assuming 'court' is a reference in your Booking model
+      .populate('user')
+       .populate('slot'); ;  // Assuming 'user' is a reference in your Booking model
+
+    if (!booking) {
+      return res.status(404).send('Booking not found');
+    }
+
+    // Pass variables in the format the template expects
+    res.render('receipt', {
+      booking,        // For booking._id
+      court: booking.court,  // For court.name, court.location
+      slot: booking.slot,   // For slot.startTime, slot.endTime, slot.date, slot.price
+      user: booking.user    // For user.name
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+});
 
 
 app.post(
@@ -285,6 +317,7 @@ app.post(
     res.redirect(`/courts/${court._id}`);
   }
 );
+
 
 
 app.get('/user/login', (req, res) => {
@@ -349,33 +382,143 @@ app.post("/courts/:id/rate", authMiddleware, async (req, res) => {
   res.redirect("/courts");
 });
 
-app.get("/history", authMiddleware, async (req, res) => {
+app.get('/history', authMiddleware, async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user.id })
       .populate("court")
-      .populate("slot");
+      .populate("slot")
+      .populate("user")
+      .sort({ createdAt: -1 });  // Sort by newest first
 
-    // Example logic: show only past slots (before now)
-    const now = new Date();
-    const pastBookings = bookings.filter(
-      b => new Date(b.slot.date).getTime() < now.getTime()
-    );
-
-    res.render("history", { bookings: pastBookings, user: req.user });
-  } catch (err) {
-    console.error("❌ History fetch error:", err);
-    res.status(500).render("error", { message: "Unable to load history." });
+    res.render("history", { bookings });  // New template: history.ejs
+  } catch (error) {
+    console.error("❌ Error fetching history:", error);
+    res.status(500).render("error", { message: "Error loading history." });
   }
 });
 
 
 app.get('/booking', authMiddleware, async (req, res) => {
-  const bookings = await Booking.find({ user: req.user.id })
-    .populate("court"); // no need to populate user here, it’s always the logged-in one
+  try {
+    // Filter to only active bookings (excludes canceled/expired)
+    const bookings = await Booking.find({ user: req.user.id, status: 'active' })  // ✅ Added status filter
+      .populate("court")
+      .populate("slot")  // ✅ Added: Populate slot for date/startTime/endTime in template
+      .populate("user");  // Optional: If you need user details in the template
 
-  res.render("booking", { bookings });
+    res.render("booking", { bookings });
+  } catch (error) {
+    console.error("❌ Error fetching bookings:", error);
+    res.status(500).render("error", { message: "Error loading bookings." });
+  }
+});
+app.post("/bookings/:id/cancel", authMiddleware, async (req, res) => {  // Changed from /delete to /cancel
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate({
+        path: "slot",
+        populate: { path: "court", model: "Court" },
+      })
+      .populate("user");
+
+    if (!booking) {
+      return res.status(404).render("error", { message: "Booking not found." });
+    }
+
+    const user = req.user;
+    const isOwner = user.role === "Owner";
+    const isAdmin = user.role === "Admin";
+
+    // Allow: user owns the booking OR owner owns the court OR admin
+    const ownsBooking = booking.user._id.toString() === user.id;
+    const ownsCourt = booking.slot.court.owner?.toString() === user.id;
+
+    if (!ownsBooking && !ownsCourt && !isAdmin) {
+      return res.status(403).render("error", { message: "Unauthorized action." });
+    }
+
+    const now = new Date();
+    const slotDate = new Date(booking.slot.date);
+
+    // Optional: Prevent canceling past/same-day bookings (only for normal users)
+    if (!isAdmin && !isOwner && slotDate <= now) {
+      return res
+        .status(400)
+        .render("error", { message: "You can’t cancel a past or same-day booking." });
+    }
+
+    // Free up the slot (unchanged)
+    const slot = await Slot.findById(booking.slot._id);
+    slot.isBooked = false;
+    slot.bookedBy = null;
+    await slot.save();
+
+    // NEW: Update booking status instead of deleting
+    booking.status = 'canceled';
+    booking.canceledBy = ownsBooking ? 'user' : 'owner';  // Mark who canceled it
+    await booking.save();  // Save the updated booking
+
+    console.log(
+      `🚫 Booking canceled by ${user.email} (${user.role}) for ${booking.slot.court.name}. Status: ${booking.status}, Canceled by: ${booking.canceledBy}`
+    );
+
+    // Redirect based on role (unchanged)
+    if (isOwner || isAdmin) {
+      res.redirect("/owner/bookings"); // You can change this route if needed
+    } else {
+      res.redirect("/history");  // Assumes you have a /history route for user history
+    }
+  } catch (err) {
+    console.error("❌ Cancel booking error:", err);
+    res.status(500).render("error", { message: "Error canceling booking." });
+  }
 });
 
+
+// Manual route to trigger expiration (optional)
+app.post('/bookings/expire', async (req, res) => {
+  try {
+    const now = new Date();
+    // Find active bookings where slot.endTime has passed
+    const expiredBookings = await Booking.find({ status: 'active' })
+      .populate('slot')
+      .then(bookings => bookings.filter(b => new Date(`${b.slot.date}T${b.slot.endTime}`) < now));
+
+    // Update them to expired
+    await Booking.updateMany(
+      { _id: { $in: expiredBookings.map(b => b._id) } },
+      { status: 'expired' }
+    );
+
+    // Optionally, free up slots
+    for (const booking of expiredBookings) {
+      await Slot.findByIdAndUpdate(booking.slot._id, { isBooked: false, bookedBy: null });
+    }
+
+    res.json({ message: `${expiredBookings.length} bookings expired` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Cron job to run every hour (adjust as needed)
+cron.schedule('0 * * * *', async () => {  // Every hour at minute 0
+  console.log('Running expiration check...');
+  // Call the expiration logic here (same as above)
+  const now = new Date();
+  const expiredBookings = await Booking.find({ status: 'active' })
+    .populate('slot')
+    .then(bookings => bookings.filter(b => new Date(`${b.slot.date}T${b.slot.endTime}`) < now));
+  await Booking.updateMany(
+    { _id: { $in: expiredBookings.map(b => b._id) } },
+    { status: 'expired' }
+  );
+  for (const booking of expiredBookings) {
+    await Slot.findByIdAndUpdate(booking.slot._id, { isBooked: false, bookedBy: null });
+  }
+  console.log(`${expiredBookings.length} bookings expired`);
+});
 
 app.get("/user/logout", (req, res) => {
   res.clearCookie("token");
