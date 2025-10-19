@@ -82,15 +82,8 @@ const Court = mongoose.model('Court', {
   location: String,
   pricePerHour: Number,
   images:[String],
-  owner:{type:mongoose.Schema.Types.ObjectId,ref:"User"},
-  ratings: [
-    {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      rating: { type: Number, min: 1, max: 5 },
-      comment: String,
-      createdAt: { type: Date, default: Date.now }
-    }
-  ],
+  owner:{type:mongoose.Schema.Types.ObjectId,ref:"User"}
+  
 
 })
 //User model
@@ -122,6 +115,13 @@ const Slot = mongoose.model("Slot",{
   price: Number,
   isBooked: { type: Boolean, default: false },
   bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
+});
+const Rating = mongoose.model('Rating', {
+  court: { type: mongoose.Schema.Types.ObjectId, ref: 'Court', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  rating: { type: Number, min: 1, max: 5, required: true },
+  comment: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
 });
 
 
@@ -174,12 +174,21 @@ app.get("/courts/:id", authMiddleware, async (req, res, next) => {
       return res.status(400).render("error", { message: "Invalid court ID. Please check the URL." });
     }
     
-    const court = await Court.findById(id);
+    // Fetch the court (no ratings here anymore)
+    const court = await Court.findById(id).exec();
+    
     if (!court) {
       return res.status(404).render("error", { message: "Court not found" });
     }
     
-    let slots = [];  // Default to an empty array
+    // Fetch and populate ratings for this court
+    const ratings = await Rating.find({ court: id })
+      .populate('user', 'name')  // Populate user with name
+      .sort({ createdAt: -1 })  // Optional: Sort by newest first
+      .exec();
+    
+    // Slots logic remains the same
+    let slots = [];
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -191,21 +200,22 @@ app.get("/courts/:id", authMiddleware, async (req, res, next) => {
         date: { $gte: today, $lte: endOfToday },
       }).sort("startTime");
       
-      console.log(`Fetched slots for court ${id}:`, slots);  // Debugging log
+      console.log(`Fetched slots for court ${id}:`, slots);
     } catch (slotError) {
       console.error("Error fetching slots:", slotError);
     }
     
-    // Calculate average rating
-    const averageRating = calculateAverageRating(court.ratings);
+    // Calculate average rating from the fetched ratings
+    const averageRating = calculateAverageRating(ratings);  // Update this function to accept ratings array
     
-    // Render the template with all variables
-    res.render("court-details", { court, slots, user: req.user, averageRating });
+    // Render with ratings array
+    res.render("court-details", { court, slots, ratings, user: req.user, averageRating });
   } catch (err) {
     console.error("Court detail error:", err);
     next(err);
   }
 });
+
 
 // ... (rest of your code continues)
 
@@ -363,25 +373,40 @@ app.post('/user/register', async (req, res) => {
 
   res.redirect('/user/login'); // go to login after registering
 });
-app.post("/courts/:id/rate", authMiddleware, async (req, res) => {
-  const { rating, comment } = req.body;
-  const court = await Court.findById(req.params.id);
+app.post("/history/:id/rate", authMiddleware, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const courtId = req.params.id;
 
-  if (!court) return res.status(404).render("error", { message: "Court not found" });
+    // Check if user is authenticated and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).render("error", { message: "You must be logged in to rate." });
+    }
 
-  // Prevent double-rating
-  const existing = court.ratings.find(r => r.user.toString() === req.user._id.toString());
-  if (existing) {
-    existing.rating = rating;
-    existing.comment = comment;
-  } else {
-    court.ratings.push({ user: req.user._id, rating, comment });
+    // Check if the court exists
+    const court = await Court.findById(courtId);
+    if (!court) {
+      return res.status(404).render("error", { message: "Court not found" });
+    }
+
+    // Remove any existing rating by this user for this court
+    await Rating.deleteMany({ court: courtId, user: req.user.id });
+
+    // Create and save the new rating
+    const newRating = new Rating({
+      court: courtId,
+      user: req.user.id,  // Changed from req.user._id to req.user.id
+      rating: parseInt(rating),
+      comment: comment || ""
+    });
+    await newRating.save();
+
+    res.redirect(`/courts/${courtId}`);
+  } catch (err) {
+    console.error("❌ Rating error:", err);
+    res.status(500).render("error", { message: "Error submitting rating." });
   }
-
-  await court.save();
-  res.redirect("/courts");
 });
-
 app.get('/history', authMiddleware, async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user.id })
@@ -390,12 +415,23 @@ app.get('/history', authMiddleware, async (req, res) => {
       .populate("user")
       .sort({ createdAt: -1 });  // Sort by newest first
 
+    // For each booking, check if the user has already rated the court
+    for (let b of bookings) {
+      if (b.court) {
+        const existingRating = await Rating.findOne({ court: b.court._id, user: req.user.id });
+        b.hasRated = !!existingRating;  // Set flag to true if rating exists
+      } else {
+        b.hasRated = false;  // No court, so can't rate
+      }
+    }
+
     res.render("history", { bookings });  // New template: history.ejs
   } catch (error) {
     console.error("❌ Error fetching history:", error);
     res.status(500).render("error", { message: "Error loading history." });
   }
 });
+
 
 
 app.get('/booking', authMiddleware, async (req, res) => {
@@ -550,14 +586,11 @@ function authMiddleware(req, res, next) {
     res.redirect("/user/login");
   }
 }
-const calculateAverageRating = (ratings) => {
-  if (!ratings || ratings.length === 0) {
-    return 0; // Return 0 if no ratings
-  }
-  const total = ratings.reduce((sum, r) => sum + r.rating, 0);
-  return (total / ratings.length).toFixed(1); // Return as a string with 1 decimal place
-};
-
+function calculateAverageRating(ratings) {
+  if (!ratings || ratings.length === 0) return 0;
+  const sum = ratings.reduce((acc, r) => acc + r.rating, 0);
+  return (sum / ratings.length).toFixed(1);
+}
 // ---------------------
 // Start Server
 // ---------------------

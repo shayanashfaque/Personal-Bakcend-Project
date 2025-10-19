@@ -89,6 +89,12 @@
       color: #666;
       margin-top: 3rem;
     }
+
+    .already-rated {
+      color: #666;
+      font-style: italic;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -119,9 +125,9 @@
              b.status === 'expired' ? 'Expired' : 'Active' %>
         </div>
 
-        <!-- Rating form: Only show for active or expired bookings (not canceled) -->
-        <% if (b.status !== 'canceled') { %>
-          <form action="/courts/<%= b.court ? b.court._id : '' %>/rate" method="POST">
+        <!-- Rating form: Only show if not canceled, court exists, and user hasn't rated yet -->
+        <% if (b.status !== 'canceled' && b.court && !b.hasRated) { %>
+          <form action="/history/<%= b.court._id %>/rate" method="POST">
             <label>Rate this court:</label>
             <select name="rating" required>
               <option value="">Select</option>
@@ -129,9 +135,11 @@
                 <option value="<%= i %>"><%= i %> ★</option>
               <% } %>
             </select>
-            <input type="text" name="comment" placeholder="Leave a comment">
+            <input type="text" name="comment" placeholder="Leave a comment" required>
             <button type="submit">Submit</button>
           </form>
+        <% } else if (b.hasRated) { %>
+          <p class="already-rated">You have already rated this court.</p>
         <% } %>
       </div>
     <% }) %>

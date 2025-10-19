@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= court.name %> - Details | Footlinks</title>
   <style>
     body {
@@ -101,6 +101,27 @@
     .back-link:hover {
       text-decoration: underline;
     }
+
+    /* Ratings & Comments styles */
+    .ratings-comments {
+      margin-top: 2rem;
+    }
+
+    .ratings-comments ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .ratings-comments li {
+      background: #f1f1f1;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .ratings-comments strong {
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -108,21 +129,20 @@
     <h1><%= court.name %></h1>
     <p><strong>📍 Location:</strong> <%= court.location %></p>
     <p><strong>💵 Price/hour:</strong> $<%= court.pricePerHour %></p>
-    <p><strong>⭐ Average Rating:</strong> <%= averageRating %> / 5</p>  <!-- New line to display average rating -->
+    <p><strong>⭐ Average Rating:</strong> <%= averageRating %> / 5</p>
 
     <% if (court.images && court.images.length > 0) { %>
       <div class="court-images">
         <% court.images.forEach(img => { %>
-          <img src="<%= img %>" alt="Court image">
+          <img src="<%= img %>" alt="Court image" />
         <% }) %>
       </div>
     <% } else { %>
       <div class="court-images">
-        <img src="https://via.placeholder.com/800x400?text=No+Images+Uploaded" alt="No images available">
+        <img src="https://via.placeholder.com/800x400?text=No+Images+Uploaded" alt="No images available" />
       </div>
     <% } %>
 
-    <!-- Upload Form (Visible only to Admin or Owner) -->
     <% if (
       typeof user !== 'undefined' && user &&
       (
@@ -136,43 +156,58 @@
       <div class="upload-form">
         <h3>Upload Court Images</h3>
         <form action="/courts/<%= court._id %>/upload" method="POST" enctype="multipart/form-data">
-          <input type="file" name="images" multiple required>
+          <input type="file" name="images" multiple required />
           <button type="submit">Upload Images</button>
         </form>
       </div>
     <% } %>
 
-    <!-- Slot Section with Date Picker -->
     <div class="slots-container">
       <h2>Available Slots</h2>
-      
-      <!-- Add Date Picker -->
+
       <div style="margin-bottom: 1rem;">
         <label for="datePicker">Select Date: </label>
-        <input type="date" id="datePicker">
+        <input type="date" id="datePicker" />
       </div>
-      
-      <!-- Container for Slots (to be updated dynamically) -->
+
       <div id="slotsList">
-        <!-- Initial slots will be handled by JavaScript -->
-        <p>Loading slots...</p>  <!-- Placeholder for initial load -->
+        <p>Loading slots...</p>
       </div>
     </div>
 
-    <a href="/courts" class="back-link">← Back to Courts</a>  <!-- Updated link to match your routes -->
+    <!-- Ratings & Comments Display Only -->
+    <div class="ratings-comments">
+      <h2>Ratings & Comments</h2>
+
+      <% if (ratings && ratings.length > 0) { %>
+        <ul>
+          <% ratings.forEach(r => { %>
+            <li>
+              <strong><%= r.user && r.user.name ? r.user.name : 'User' %></strong>
+              <span>⭐ <%= r.rating %> / 5</span>
+              <p><%= r.comment %></p>
+            </li>
+          <% }) %>
+        </ul>
+      <% } else { %>
+        <p>No ratings or comments yet.</p>
+      <% } %>
+    </div>
+
+    <a href="/courts" class="back-link">← Back to Courts</a>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const datePicker = document.getElementById('datePicker');
       const slotsList = document.getElementById('slotsList');
-      const courtId = '<%= court._id %>';  // Get court ID from EJS
+      const courtId = '<%= court._id %>';
 
       function fetchSlots(date) {
         fetch(`/courts/${courtId}/slots?date=${date}`)
           .then(response => response.json())
           .then(data => {
-            slotsList.innerHTML = '';  // Clear existing content
+            slotsList.innerHTML = '';
             if (data.length === 0) {
               slotsList.innerHTML = '<p>No slots available for this date.</p>';
             } else {
@@ -197,12 +232,10 @@
           });
       }
 
-      // Set initial date to today and fetch slots
-      const today = new Date().toISOString().split('T')[0];  // YYYY-MM-DD format
-      datePicker.value = today;  // Set default value
-      fetchSlots(today);  // Initial fetch
+      const today = new Date().toISOString().split('T')[0];
+      datePicker.value = today;
+      fetchSlots(today);
 
-      // Listen for date changes
       datePicker.addEventListener('change', function() {
         const selectedDate = datePicker.value;
         if (selectedDate) {
